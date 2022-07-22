@@ -1,7 +1,8 @@
 plugins {
 	id "org.springframework.boot" version "2.7.1"
-	id "io.spring.dependency-management" version "1.0.11.RELEASE"
+	id "io.spring.dependency-management" version "1.0.12.RELEASE"
 	id "java"
+	id 'org.springframework.experimental.aot' version '0.12.1'
 }
 
 group = project.rootProject.group
@@ -9,6 +10,7 @@ version = project.rootProject.version
 sourceCompatibility = "17"
 
 repositories {
+    maven { url 'https://repo.spring.io/release' }
 	mavenCentral()
 }
 
@@ -16,4 +18,13 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-web"
 	implementation "org.springframework.boot:spring-boot-starter-security"
 	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+tasks.named('bootBuildImage') {
+  builder = 'paketobuildpacks/builder:tiny'
+  environment = ['BP_NATIVE_IMAGE': 'true']
 }
