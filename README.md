@@ -19,7 +19,7 @@ The username is `user1` and the password is `password`.
    ./gradlew -b messages-client/samples-messages-client.gradle bootRun
    ```
 
-1. Run Resource Server as a native image -> 
+1. Run Resource Server as a native image
 
    ```
    ./gradlew -b messages-resource/samples-messages-resource.gradle nativeCompile
