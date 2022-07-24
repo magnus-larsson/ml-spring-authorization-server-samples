@@ -16,25 +16,27 @@
 package sample.config;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+
+import static org.springframework.http.HttpMethod.*;
 
 /**
  * @author Joe Grandja
  * @since 0.0.1
  */
-@EnableWebSecurity
+@EnableWebFluxSecurity
 public class ResourceServerConfig {
 
 	// @formatter:off
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
 		http
-			.mvcMatcher("/messages/**")
-				.authorizeRequests()
-					.mvcMatchers("/messages/**").access("hasAuthority('SCOPE_message.read')")
-					.and()
+			.authorizeExchange()
+				.pathMatchers("/messages/**").hasAuthority("SCOPE_message.read")
+				.anyExchange().authenticated()
+				.and()
 			.oauth2ResourceServer()
 				.jwt();
 		return http.build();

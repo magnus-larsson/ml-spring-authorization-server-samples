@@ -22,11 +22,13 @@ import java.net.URL;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 /**
  * @author Joe Grandja
@@ -38,25 +40,22 @@ public class MessagesController {
 	private static final Logger LOG = LoggerFactory.getLogger(MessagesController.class);
 
 	@GetMapping("/messages")
-	public String[] getMessages() {
-		LOG.info("v3");
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		Jwt jwtToken = ((JwtAuthenticationToken)auth).getToken();
-		logAuthorizationInfo(jwtToken);
-		return new String[] {"Message 1", "Message 2", "Message 3"};
+	public Flux<String> getMessages() {
+		return ReactiveSecurityContextHolder.getContext()
+			.map(SecurityContext::getAuthentication)
+			.doOnNext(auth -> logAuthorizationInfo(auth))
+			.map(auth -> new String[] {"Message 1", "Message 2", "Message 3"})
+			.flatMapMany(Flux::fromArray);
 	}
 
-	private void logAuthorizationInfo(Jwt jwt) {
-		if (jwt == null) {
-			LOG.warn("No JWT supplied, running tests are we?");
-		} else {
-			URL issuer = jwt.getIssuer();
-			List<String> audience = jwt.getAudience();
-			Object subject = jwt.getClaims().get("sub");
-			Object scopes = jwt.getClaims().get("scope");
-			Object expires = jwt.getClaims().get("exp");
+	private void logAuthorizationInfo(Authentication auth) {
+		Jwt jwtToken = ((JwtAuthenticationToken)auth).getToken();
+		URL issuer = jwtToken.getIssuer();
+		List<String> audience = jwtToken.getAudience();
+		Object subject = jwtToken.getClaims().get("sub");
+		Object scopes = jwtToken.getClaims().get("scope");
+		Object expires = jwtToken.getClaims().get("exp");
 
-			LOG.info("Authorization info: Subject: {}, scopes: {}, expires {}: issuer: {}, audience: {}", subject, scopes, expires, issuer, audience);
-		}
+		LOG.info("Authorization info: Subject: {}, scopes: {}, expires {}: issuer: {}, audience: {}", subject, scopes, expires, issuer, audience);
 	}
 }
